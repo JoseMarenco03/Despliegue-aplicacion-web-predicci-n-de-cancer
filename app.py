@@ -35,13 +35,20 @@ for feature in original_features:
 # Botón de predicción
 if st.button('Realizar Predicción'):
     # 3. Preparar los datos de entrada del usuario
-    input_df = pd.DataFrame([input_data])
-    
-    # Eliminar las mismas columnas que se eliminaron durante el entrenamiento
-    input_df_dropped = input_df.drop(columns=columns_to_drop, errors='ignore')
-    
-    # Escalar los datos de entrada usando el mismo escalador
-    scaled_input = scaler.transform(input_df_dropped)
+# Asegurar el MISMO orden de columnas que en el entrenamiento
+input_df = pd.DataFrame([input_data])[original_features]
+
+# Eliminar las mismas columnas que se eliminaron durante el entrenamiento
+input_df_dropped = input_df.drop(columns=columns_to_drop, errors='ignore')
+
+# Si el scaler fue entrenado con nombres de columnas, ajustamos al mismo orden
+if hasattr(scaler, "feature_names_in_"):
+    # Reordenar según lo que el scaler espera
+    expected_cols = list(scaler.feature_names_in_)
+    input_df_dropped = input_df_dropped[expected_cols]
+
+# Escalar los datos de entrada usando el mismo escalador
+scaled_input = scaler.transform(input_df_dropped)
     
     # 4. Realizar la predicción
     prediction = model.predict(scaled_input)
